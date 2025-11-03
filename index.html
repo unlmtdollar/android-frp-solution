@@ -5,13 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Android FRP Solutions Forum</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
-    
     <style>
         * {
             margin: 0;
@@ -30,14 +23,29 @@
             --light: #f8f9fa;
             --dark: #212529;
             --gray: #6c757d;
+            --bg-color: #f5f7fb;
+            --card-bg: #ffffff;
+            --text-color: #212529;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
             --gradient: linear-gradient(135deg, #4361ee, #3a0ca3, #7209b7);
             --gradient2: linear-gradient(135deg, #f72585, #7209b7, #4361ee);
         }
         
+        [data-theme="dark"] {
+            --bg-color: #121212;
+            --card-bg: #1e1e1e;
+            --text-color: #f5f5f5;
+            --border-color: #333333;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            --gray: #a0a0a0;
+        }
+        
         body {
-            background-color: #f5f7fb;
-            color: var(--dark);
+            background-color: var(--bg-color);
+            color: var(--text-color);
             line-height: 1.6;
+            transition: background-color 0.3s, color 0.3s;
         }
         
         .container {
@@ -50,11 +58,12 @@
         /* Header Styles */
         header {
             padding: 15px 0;
-            background: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
             position: sticky;
             top: 0;
             z-index: 100;
+            transition: background-color 0.3s;
         }
         
         .header-content {
@@ -69,12 +78,16 @@
             gap: 10px;
         }
         
-        .logo i {
-            font-size: 2rem;
+        .logo-img {
+            width: 40px;
+            height: 40px;
             background: var(--gradient2);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.2rem;
         }
         
         .logo h1 {
@@ -84,6 +97,12 @@
             background-clip: text;
             color: transparent;
             font-weight: 700;
+        }
+        
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
         }
         
         .search-bar {
@@ -97,8 +116,11 @@
             width: 100%;
             padding: 10px 15px;
             border-radius: 50px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             font-size: 0.9rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s;
         }
         
         .search-bar i {
@@ -107,6 +129,19 @@
             top: 50%;
             transform: translateY(-50%);
             color: var(--gray);
+        }
+        
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            cursor: pointer;
+            color: var(--text-color);
+            transition: transform 0.3s;
+        }
+        
+        .theme-toggle:hover {
+            transform: rotate(30deg);
         }
         
         .user-menu {
@@ -163,6 +198,65 @@
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
         }
         
+        /* Toast Notifications */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .toast {
+            padding: 15px 20px;
+            border-radius: 8px;
+            background: var(--card-bg);
+            color: var(--text-color);
+            box-shadow: var(--shadow);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 350px;
+            transform: translateX(400px);
+            opacity: 0;
+            transition: transform 0.3s, opacity 0.3s;
+        }
+        
+        .toast.show {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        
+        .toast.success {
+            border-left: 4px solid #28a745;
+        }
+        
+        .toast.error {
+            border-left: 4px solid #dc3545;
+        }
+        
+        .toast.info {
+            border-left: 4px solid var(--primary);
+        }
+        
+        .toast i {
+            font-size: 1.2rem;
+        }
+        
+        .toast.success i {
+            color: #28a745;
+        }
+        
+        .toast.error i {
+            color: #dc3545;
+        }
+        
+        .toast.info i {
+            color: var(--primary);
+        }
+        
         /* Main Content */
         .main-content {
             display: flex;
@@ -173,16 +267,17 @@
         /* Sidebar */
         .sidebar {
             width: 250px;
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow);
             height: fit-content;
+            transition: background-color 0.3s;
         }
         
         .sidebar h3 {
             margin-bottom: 15px;
-            color: var(--dark);
+            color: var(--text-color);
             font-size: 1.1rem;
         }
         
@@ -226,7 +321,7 @@
         }
         
         .forum-header h2 {
-            color: var(--dark);
+            color: var(--text-color);
         }
         
         /* Categories */
@@ -238,11 +333,11 @@
         }
         
         .category-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
-            transition: transform 0.3s ease;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s ease, background-color 0.3s;
             cursor: pointer;
         }
         
@@ -283,17 +378,18 @@
             justify-content: space-between;
             color: var(--gray);
             font-size: 0.85rem;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-color);
             padding-top: 15px;
         }
         
         /* Posts Container */
         .posts-container {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow);
             margin-bottom: 30px;
+            transition: background-color 0.3s;
         }
         
         .posts-header {
@@ -306,7 +402,7 @@
         .post {
             display: flex;
             padding: 15px 0;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid var(--border-color);
         }
         
         .post:last-child {
@@ -334,7 +430,7 @@
         .post-title {
             font-weight: 600;
             margin-bottom: 5px;
-            color: var(--dark);
+            color: var(--text-color);
             text-decoration: none;
             display: block;
             font-size: 1.1rem;
@@ -413,7 +509,7 @@
         }
         
         .modal-content {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             width: 90%;
             max-width: 450px;
@@ -421,6 +517,7 @@
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
             max-height: 90vh;
             overflow-y: auto;
+            transition: background-color 0.3s;
         }
         
         .modal-header {
@@ -431,7 +528,7 @@
         }
         
         .modal-header h2 {
-            color: var(--dark);
+            color: var(--text-color);
         }
         
         .close-modal {
@@ -449,16 +546,19 @@
         .form-group label {
             display: block;
             margin-bottom: 8px;
-            color: var(--dark);
+            color: var(--text-color);
             font-weight: 500;
         }
         
         .form-control {
             width: 100%;
             padding: 12px 15px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             font-size: 1rem;
+            background: var(--card-bg);
+            color: var(--text-color);
+            transition: border-color 0.3s;
         }
         
         .form-footer {
@@ -510,30 +610,32 @@
         .file-upload-label {
             display: inline-block;
             padding: 10px 15px;
-            background: #f8f9fa;
-            border: 1px dashed #ddd;
+            background: var(--bg-color);
+            border: 1px dashed var(--border-color);
             border-radius: 5px;
             cursor: pointer;
             color: var(--gray);
+            transition: background-color 0.3s;
         }
         
         .file-upload-label:hover {
-            background: #e9ecef;
+            background: var(--border-color);
         }
         
         /* Donation Section */
         .donation-section {
-            background: white;
+            background: var(--card-bg);
             border-radius: 10px;
             padding: 20px;
             margin-top: 30px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            box-shadow: var(--shadow);
             text-align: center;
+            transition: background-color 0.3s;
         }
         
         .donation-section h3 {
             margin-bottom: 15px;
-            color: var(--dark);
+            color: var(--text-color);
         }
         
         .donation-section p {
@@ -551,7 +653,7 @@
         
         .crypto-option {
             padding: 10px 20px;
-            border: 1px solid #ddd;
+            border: 1px solid var(--border-color);
             border-radius: 5px;
             cursor: pointer;
             transition: all 0.3s ease;
@@ -559,30 +661,60 @@
         
         .crypto-option:hover {
             border-color: var(--primary);
-            background: #f8f9ff;
+            background: var(--bg-color);
         }
         
         .crypto-option.active {
             border-color: var(--primary);
-            background: #f0f2ff;
+            background: var(--bg-color);
         }
         
         .crypto-address {
             margin-top: 20px;
             padding: 15px;
-            background: #f8f9fa;
+            background: var(--bg-color);
             border-radius: 5px;
             font-family: monospace;
             word-break: break-all;
             display: none;
+            position: relative;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .crypto-address.active {
+            display: block;
+        }
+        
+        .crypto-address:hover {
+            background: var(--border-color);
+        }
+        
+        .copy-notification {
+            position: absolute;
+            top: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--dark);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        
+        .copy-notification.show {
+            opacity: 1;
         }
         
         /* Footer */
         footer {
-            background: white;
+            background: var(--card-bg);
             padding: 40px 0 20px;
             margin-top: 50px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-color);
+            transition: background-color 0.3s;
         }
         
         .footer-content {
@@ -600,7 +732,7 @@
         
         .footer-column h3 {
             margin-bottom: 20px;
-            color: var(--dark);
+            color: var(--text-color);
             font-size: 1.1rem;
         }
         
@@ -627,7 +759,7 @@
             color: var(--gray);
             font-size: 0.9rem;
             padding-top: 20px;
-            border-top: 1px solid #eee;
+            border-top: 1px solid var(--border-color);
         }
         
         /* Loading Spinner */
@@ -679,30 +811,45 @@
                 flex-direction: column;
                 gap: 10px;
             }
+            
+            .header-controls {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
     <!-- Header -->
     <header>
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <i class="fas fa-mobile-alt"></i>
+                    <div class="logo-img">
+                        <i class="fas fa-mobile-alt"></i>
+                    </div>
                     <h1>Android FRP Forum</h1>
                 </div>
                 <div class="search-bar">
                     <input type="text" placeholder="Search for solutions..." id="searchInput">
                     <i class="fas fa-search"></i>
                 </div>
-                <div class="user-menu" id="userMenu">
-                    <div class="auth-buttons" id="authButtons">
-                        <button class="btn btn-outline" id="loginBtn">Login</button>
-                        <button class="btn btn-primary" id="signupBtn">Sign Up</button>
-                    </div>
-                    <div class="user-info" id="userInfo" style="display: none;">
-                        <div class="user-avatar" id="userAvatar">JD</div>
-                        <button class="btn btn-outline" id="logoutBtn">Logout</button>
+                <div class="header-controls">
+                    <button class="theme-toggle" id="themeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <div class="user-menu" id="userMenu">
+                        <div class="auth-buttons" id="authButtons">
+                            <button class="btn btn-outline" id="loginBtn">Login</button>
+                            <button class="btn btn-primary" id="signupBtn">Sign Up</button>
+                        </div>
+                        <div class="user-info" id="userInfo" style="display: none;">
+                            <div class="user-avatar" id="userAvatar">JD</div>
+                            <button class="btn btn-outline" id="logoutBtn">Logout</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -832,19 +979,24 @@
                         </div>
                     </div>
                     <div class="crypto-address active" id="btc-address">
-                        Bitcoin Address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh
+                        <span>Bitcoin Address: bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh</span>
+                        <div class="copy-notification">Copied!</div>
                     </div>
                     <div class="crypto-address" id="eth-address">
-                        Ethereum Address: 0x71C7656EC7ab88b098defB751B7401B5f6d8976F
+                        <span>Ethereum Address: 0x71C7656EC7ab88b098defB751B7401B5f6d8976F</span>
+                        <div class="copy-notification">Copied!</div>
                     </div>
                     <div class="crypto-address" id="usdt-address">
-                        USDT (ERC20): 0x71C7656EC7ab88b098defB751B7401B5f6d8976F
+                        <span>USDT (ERC20): 0x71C7656EC7ab88b098defB751B7401B5f6d8976F</span>
+                        <div class="copy-notification">Copied!</div>
                     </div>
                     <div class="crypto-address" id="bnb-address">
-                        BNB Address: bnb1g4wrxqfdk84p4ujampfe5j5l2ud4vx0h0l5q7v
+                        <span>BNB Address: bnb1g4wrxqfdk84p4ujampfe5j5l2ud4vx0h0l5q7v</span>
+                        <div class="copy-notification">Copied!</div>
                     </div>
                     <div class="crypto-address" id="sol-address">
-                        Solana Address: 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM
+                        <span>Solana Address: 9WzDXwBbmkg8ZTbNMqUxvQRAyrZzDsGYdLVL9zYtAWWM</span>
+                        <div class="copy-notification">Copied!</div>
                     </div>
                 </div>
             </div>
@@ -980,7 +1132,7 @@
             projectId: "android-frp-solution",
             storageBucket: "android-frp-solution.firebasestorage.app",
             messagingSenderId: "70697484049",
-            appId: "1:70697484049:web:5b9c41a2f5cec7a1e556b0"
+            appId: "1:70697484049:web:93b036ed33c090c1e556b0"
         };
 
         // Initialize Firebase
@@ -997,6 +1149,8 @@
         const authButtons = document.getElementById('authButtons');
         const userInfo = document.getElementById('userInfo');
         const userAvatar = document.getElementById('userAvatar');
+        const themeToggle = document.getElementById('themeToggle');
+        const toastContainer = document.getElementById('toastContainer');
         
         const loginModal = document.getElementById('loginModal');
         const signupModal = document.getElementById('signupModal');
@@ -1020,11 +1174,88 @@
         const categoryLinks = document.querySelectorAll('.sidebar a[data-category]');
         const categoryCards = document.querySelectorAll('.category-card');
         const postsTitle = document.getElementById('postsTitle');
+        const cryptoOptions = document.querySelectorAll('.crypto-option');
+        const cryptoAddresses = document.querySelectorAll('.crypto-address');
         
         // Current filter state
         let currentCategory = 'all';
         let currentSearch = '';
         let currentSort = 'newest';
+
+        // Toast notification system
+        function showToast(message, type = 'info') {
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            let icon = 'info-circle';
+            if (type === 'success') icon = 'check-circle';
+            if (type === 'error') icon = 'exclamation-circle';
+            
+            toast.innerHTML = `
+                <i class="fas fa-${icon}"></i>
+                <span>${message}</span>
+            `;
+            
+            toastContainer.appendChild(toast);
+            
+            // Show toast
+            setTimeout(() => {
+                toast.classList.add('show');
+            }, 100);
+            
+            // Hide and remove toast after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => {
+                    toastContainer.removeChild(toast);
+                }, 300);
+            }, 5000);
+        }
+
+        // Theme toggle functionality
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme') || 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme);
+            updateThemeIcon(savedTheme);
+        }
+        
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            updateThemeIcon(newTheme);
+        }
+        
+        function updateThemeIcon(theme) {
+            const icon = themeToggle.querySelector('i');
+            if (theme === 'dark') {
+                icon.className = 'fas fa-sun';
+            } else {
+                icon.className = 'fas fa-moon';
+            }
+        }
+        
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Crypto address copy functionality
+        cryptoAddresses.forEach(address => {
+            address.addEventListener('click', function() {
+                const text = this.querySelector('span').textContent;
+                const addressText = text.split(': ')[1];
+                
+                // Copy to clipboard
+                navigator.clipboard.writeText(addressText).then(() => {
+                    const notification = this.querySelector('.copy-notification');
+                    notification.classList.add('show');
+                    
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                    }, 2000);
+                });
+            });
+        });
 
         // Modal controls
         loginBtn.addEventListener('click', () => showModal(loginModal));
@@ -1094,13 +1325,20 @@
             
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // Signed in
-                    hideModal(loginModal);
-                    loginForm.reset();
+                    // Check if email is verified
+                    if (userCredential.user.emailVerified) {
+                        // Signed in
+                        hideModal(loginModal);
+                        loginForm.reset();
+                        showToast('Successfully logged in!', 'success');
+                    } else {
+                        // Email not verified
+                        auth.signOut();
+                        showToast('Please verify your email before logging in. Check your spam folder.', 'error');
+                    }
                 })
                 .catch((error) => {
-                    errorAlert.textContent = error.message;
-                    errorAlert.style.display = 'block';
+                    showToast(error.message, 'error');
                 });
         });
         
@@ -1113,8 +1351,7 @@
             const errorAlert = document.getElementById('signupError');
             
             if (password !== confirmPassword) {
-                errorAlert.textContent = 'Passwords do not match';
-                errorAlert.style.display = 'block';
+                showToast('Passwords do not match', 'error');
                 return;
             }
             
@@ -1132,13 +1369,15 @@
                     });
                 })
                 .then(() => {
-                    alert('Account created! Please check your email for verification link.');
+                    showToast('Account created! Please check your email for verification link.', 'success');
                     hideModal(signupModal);
                     signupForm.reset();
+                    
+                    // Sign out the user until they verify their email
+                    auth.signOut();
                 })
                 .catch((error) => {
-                    errorAlert.textContent = error.message;
-                    errorAlert.style.display = 'block';
+                    showToast(error.message, 'error');
                 });
         });
         
@@ -1150,24 +1389,24 @@
             
             auth.sendPasswordResetEmail(email)
                 .then(() => {
-                    successAlert.textContent = 'Password reset email sent! Check your inbox.';
-                    successAlert.style.display = 'block';
+                    showToast('Password reset email sent! Check your inbox.', 'success');
+                    hideModal(forgotPasswordModal);
                     forgotPasswordForm.reset();
                 })
                 .catch((error) => {
-                    errorAlert.textContent = error.message;
-                    errorAlert.style.display = 'block';
+                    showToast(error.message, 'error');
                 });
         });
         
         logoutBtn.addEventListener('click', () => {
             auth.signOut();
+            showToast('You have been logged out', 'info');
         });
         
         // Auth state observer
         auth.onAuthStateChanged((user) => {
-            if (user) {
-                // User is signed in
+            if (user && user.emailVerified) {
+                // User is signed in and verified
                 authButtons.style.display = 'none';
                 userInfo.style.display = 'flex';
                 
@@ -1186,7 +1425,7 @@
                         userAvatar.textContent = user.email.charAt(0).toUpperCase();
                     });
             } else {
-                // User is signed out
+                // User is signed out or not verified
                 authButtons.style.display = 'flex';
                 userInfo.style.display = 'none';
             }
@@ -1196,7 +1435,7 @@
         createPostForm.addEventListener('submit', (e) => {
             e.preventDefault();
             if (!auth.currentUser) {
-                alert('Please log in to create a post');
+                showToast('Please log in to create a post', 'error');
                 return;
             }
             
@@ -1240,12 +1479,12 @@
                 .then(() => {
                     hideModal(createPostModal);
                     createPostForm.reset();
+                    showToast('Post published successfully!', 'success');
                     // Refresh posts to show the new one
                     loadPosts();
                 })
                 .catch((error) => {
-                    errorAlert.textContent = error.message;
-                    errorAlert.style.display = 'block';
+                    showToast(error.message, 'error');
                 });
         });
 
@@ -1470,52 +1709,7 @@
             });
         });
 
-        // Real-time listener for posts
-        function setupRealtimeListener() {
-            let query = db.collection('posts');
-            
-            if (currentCategory !== 'all') {
-                query = query.where('category', '==', currentCategory);
-            }
-            
-            query.orderBy('createdAt', 'desc')
-                .onSnapshot((snapshot) => {
-                    loadPosts();
-                    updateCategoryStats();
-                }, (error) => {
-                    console.error("Error in real-time listener:", error);
-                });
-        }
-        
-        // Update category stats
-        function updateCategoryStats() {
-            const categories = ['samsung', 'xiaomi', 'huawei', 'oppo', 'vivo', 'other'];
-            
-            categories.forEach(category => {
-                db.collection('posts')
-                    .where('category', '==', category)
-                    .get()
-                    .then(snapshot => {
-                        const count = snapshot.size;
-                        document.getElementById(`${category}-count`).textContent = `${count} Topics`;
-                        
-                        // Calculate total replies (comments)
-                        let totalReplies = 0;
-                        snapshot.forEach(doc => {
-                            totalReplies += doc.data().comments || 0;
-                        });
-                        document.getElementById(`${category}-replies`).textContent = `${totalReplies} Replies`;
-                    })
-                    .catch(error => {
-                        console.error(`Error getting stats for ${category}:`, error);
-                    });
-            });
-        }
-
         // Crypto donation functionality
-        const cryptoOptions = document.querySelectorAll('.crypto-option');
-        const cryptoAddresses = document.querySelectorAll('.crypto-address');
-        
         cryptoOptions.forEach(option => {
             option.addEventListener('click', () => {
                 const crypto = option.getAttribute('data-crypto');
@@ -1528,10 +1722,8 @@
                 cryptoAddresses.forEach(addr => {
                     if (addr.id === `${crypto}-address`) {
                         addr.classList.add('active');
-                        addr.style.display = 'block';
                     } else {
                         addr.classList.remove('active');
-                        addr.style.display = 'none';
                     }
                 });
             });
@@ -1539,8 +1731,8 @@
 
         // Initialize the app
         function initApp() {
+            initTheme();
             loadPosts();
-            setupRealtimeListener();
             updateCategoryStats();
         }
 
