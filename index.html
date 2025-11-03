@@ -5,6 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Android FRP Solutions Forum</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-storage-compat.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -81,13 +88,13 @@
         .logo-img {
             width: 40px;
             height: 40px;
-            background: var(--gradient2);
             border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
             font-size: 1.2rem;
+            background: var(--gradient2);
         }
         
         .logo h1 {
@@ -138,6 +145,9 @@
             cursor: pointer;
             color: var(--text-color);
             transition: transform 0.3s;
+            padding: 8px;
+            border-radius: 50%;
+            background: var(--bg-color);
         }
         
         .theme-toggle:hover {
@@ -196,6 +206,12 @@
         .btn:hover {
             transform: translateY(-2px);
             box-shadow: 0 5px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
         }
         
         /* Toast Notifications */
@@ -572,25 +588,6 @@
             color: var(--primary);
             text-decoration: none;
             cursor: pointer;
-        }
-        
-        .alert {
-            padding: 10px 15px;
-            border-radius: 5px;
-            margin-bottom: 20px;
-            display: none;
-        }
-        
-        .alert-success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .alert-error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
         }
         
         /* Create Post Modal */
@@ -1010,7 +1007,7 @@
                 <h2>Login to Your Account</h2>
                 <button class="close-modal">&times;</button>
             </div>
-            <div class="alert alert-error" id="loginError"></div>
+            <div class="alert alert-error" id="loginError" style="display: none;"></div>
             <form id="loginForm">
                 <div class="form-group">
                     <label for="loginEmail">Email Address</label>
@@ -1020,7 +1017,10 @@
                     <label for="loginPassword">Password</label>
                     <input type="password" id="loginPassword" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="loginSubmitBtn">
+                    <span class="btn-text">Login</span>
+                    <div class="spinner" style="display: none; width: 20px; height: 20px;"></div>
+                </button>
             </form>
             <div class="form-footer">
                 <p>Don't have an account? <a id="showSignup">Sign up here</a></p>
@@ -1036,7 +1036,7 @@
                 <h2>Create an Account</h2>
                 <button class="close-modal">&times;</button>
             </div>
-            <div class="alert alert-error" id="signupError"></div>
+            <div class="alert alert-error" id="signupError" style="display: none;"></div>
             <form id="signupForm">
                 <div class="form-group">
                     <label for="signupName">Full Name</label>
@@ -1054,7 +1054,10 @@
                     <label for="signupConfirmPassword">Confirm Password</label>
                     <input type="password" id="signupConfirmPassword" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Create Account</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="signupSubmitBtn">
+                    <span class="btn-text">Create Account</span>
+                    <div class="spinner" style="display: none; width: 20px; height: 20px;"></div>
+                </button>
             </form>
             <div class="form-footer">
                 <p>Already have an account? <a id="showLogin">Login here</a></p>
@@ -1069,14 +1072,17 @@
                 <h2>Reset Your Password</h2>
                 <button class="close-modal">&times;</button>
             </div>
-            <div class="alert alert-success" id="forgotPasswordSuccess"></div>
-            <div class="alert alert-error" id="forgotPasswordError"></div>
+            <div class="alert alert-success" id="forgotPasswordSuccess" style="display: none;"></div>
+            <div class="alert alert-error" id="forgotPasswordError" style="display: none;"></div>
             <form id="forgotPasswordForm">
                 <div class="form-group">
                     <label for="forgotPasswordEmail">Email Address</label>
                     <input type="email" id="forgotPasswordEmail" class="form-control" required>
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Send Reset Link</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="forgotPasswordSubmitBtn">
+                    <span class="btn-text">Send Reset Link</span>
+                    <div class="spinner" style="display: none; width: 20px; height: 20px;"></div>
+                </button>
             </form>
             <div class="form-footer">
                 <p>Remember your password? <a id="showLoginFromForgot">Login here</a></p>
@@ -1091,7 +1097,7 @@
                 <h2>Create New Post</h2>
                 <button class="close-modal">&times;</button>
             </div>
-            <div class="alert alert-error" id="createPostError"></div>
+            <div class="alert alert-error" id="createPostError" style="display: none;"></div>
             <form class="post-form" id="createPostForm">
                 <div class="form-group">
                     <label for="postTitle">Title</label>
@@ -1117,16 +1123,18 @@
                     <label for="postImage">Add Image (Optional)</label>
                     <input type="file" id="postImage" accept="image/*" class="file-upload">
                 </div>
-                <button type="submit" class="btn btn-primary" style="width: 100%;">Publish Post</button>
+                <button type="submit" class="btn btn-primary" style="width: 100%;" id="createPostSubmitBtn">
+                    <span class="btn-text">Publish Post</span>
+                    <div class="spinner" style="display: none; width: 20px; height: 20px;"></div>
+                </button>
             </form>
         </div>
     </div>
 
     <!-- Firebase Configuration and App Logic -->
     <script>
-        // Firebase configuration
+        // Firebase configuration - REPLACE WITH YOUR ACTUAL FIREBASE CONFIG
         const firebaseConfig = {
-            // Replace with your Firebase project configuration
             apiKey: "AIzaSyCnNKf__iUBYq5Y081hX9AeD2KYjETeDHw",
             authDomain: "android-frp-solution.firebaseapp.com",
             projectId: "android-frp-solution",
@@ -1140,47 +1148,6 @@
         const auth = firebase.auth();
         const db = firebase.firestore();
         const storage = firebase.storage();
-
-        // DOM Elements
-        const loginBtn = document.getElementById('loginBtn');
-        const signupBtn = document.getElementById('signupBtn');
-        const logoutBtn = document.getElementById('logoutBtn');
-        const newPostBtn = document.getElementById('newPostBtn');
-        const authButtons = document.getElementById('authButtons');
-        const userInfo = document.getElementById('userInfo');
-        const userAvatar = document.getElementById('userAvatar');
-        const themeToggle = document.getElementById('themeToggle');
-        const toastContainer = document.getElementById('toastContainer');
-        
-        const loginModal = document.getElementById('loginModal');
-        const signupModal = document.getElementById('signupModal');
-        const forgotPasswordModal = document.getElementById('forgotPasswordModal');
-        const createPostModal = document.getElementById('createPostModal');
-        
-        const loginForm = document.getElementById('loginForm');
-        const signupForm = document.getElementById('signupForm');
-        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
-        const createPostForm = document.getElementById('createPostForm');
-        
-        const showSignup = document.getElementById('showSignup');
-        const showLogin = document.getElementById('showLogin');
-        const showForgotPassword = document.getElementById('showForgotPassword');
-        const showLoginFromForgot = document.getElementById('showLoginFromForgot');
-        
-        const closeModalButtons = document.querySelectorAll('.close-modal');
-        const postsList = document.getElementById('postsList');
-        const searchInput = document.getElementById('searchInput');
-        const sortSelect = document.getElementById('sortSelect');
-        const categoryLinks = document.querySelectorAll('.sidebar a[data-category]');
-        const categoryCards = document.querySelectorAll('.category-card');
-        const postsTitle = document.getElementById('postsTitle');
-        const cryptoOptions = document.querySelectorAll('.crypto-option');
-        const cryptoAddresses = document.querySelectorAll('.crypto-address');
-        
-        // Current filter state
-        let currentCategory = 'all';
-        let currentSearch = '';
-        let currentSort = 'newest';
 
         // Toast notification system
         function showToast(message, type = 'info') {
@@ -1196,6 +1163,7 @@
                 <span>${message}</span>
             `;
             
+            const toastContainer = document.getElementById('toastContainer');
             toastContainer.appendChild(toast);
             
             // Show toast
@@ -1226,81 +1194,150 @@
             document.documentElement.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
             updateThemeIcon(newTheme);
+            
+            showToast(`${newTheme === 'dark' ? 'Dark' : 'Light'} theme activated`, 'info');
         }
         
         function updateThemeIcon(theme) {
-            const icon = themeToggle.querySelector('i');
+            const icon = document.querySelector('#themeToggle i');
             if (theme === 'dark') {
                 icon.className = 'fas fa-sun';
             } else {
                 icon.className = 'fas fa-moon';
             }
         }
-        
-        themeToggle.addEventListener('click', toggleTheme);
+
+        // Loading state for buttons
+        function setButtonLoading(button, isLoading) {
+            const spinner = button.querySelector('.spinner');
+            const text = button.querySelector('.btn-text');
+            
+            if (isLoading) {
+                button.disabled = true;
+                text.style.display = 'none';
+                spinner.style.display = 'block';
+            } else {
+                button.disabled = false;
+                text.style.display = 'block';
+                spinner.style.display = 'none';
+            }
+        }
 
         // Crypto address copy functionality
-        cryptoAddresses.forEach(address => {
-            address.addEventListener('click', function() {
-                const text = this.querySelector('span').textContent;
-                const addressText = text.split(': ')[1];
-                
-                // Copy to clipboard
-                navigator.clipboard.writeText(addressText).then(() => {
-                    const notification = this.querySelector('.copy-notification');
-                    notification.classList.add('show');
+        function initCryptoCopy() {
+            const cryptoAddresses = document.querySelectorAll('.crypto-address');
+            
+            cryptoAddresses.forEach(address => {
+                address.addEventListener('click', function() {
+                    const text = this.querySelector('span').textContent;
+                    const addressText = text.split(': ')[1];
                     
-                    setTimeout(() => {
-                        notification.classList.remove('show');
-                    }, 2000);
+                    // Copy to clipboard
+                    navigator.clipboard.writeText(addressText).then(() => {
+                        const notification = this.querySelector('.copy-notification');
+                        notification.classList.add('show');
+                        
+                        setTimeout(() => {
+                            notification.classList.remove('show');
+                        }, 2000);
+                        
+                        showToast('Address copied to clipboard!', 'success');
+                    }).catch(err => {
+                        showToast('Failed to copy address', 'error');
+                    });
                 });
             });
-        });
+        }
+
+        // Crypto option selection
+        function initCryptoOptions() {
+            const cryptoOptions = document.querySelectorAll('.crypto-option');
+            const cryptoAddresses = document.querySelectorAll('.crypto-address');
+            
+            cryptoOptions.forEach(option => {
+                option.addEventListener('click', () => {
+                    const crypto = option.getAttribute('data-crypto');
+                    
+                    // Update active state
+                    cryptoOptions.forEach(opt => opt.classList.remove('active'));
+                    option.classList.add('active');
+                    
+                    // Show corresponding address
+                    cryptoAddresses.forEach(addr => {
+                        if (addr.id === `${crypto}-address`) {
+                            addr.classList.add('active');
+                        } else {
+                            addr.classList.remove('active');
+                        }
+                    });
+                });
+            });
+        }
 
         // Modal controls
-        loginBtn.addEventListener('click', () => showModal(loginModal));
-        signupBtn.addEventListener('click', () => showModal(signupModal));
-        newPostBtn.addEventListener('click', () => {
-            if (auth.currentUser) {
-                showModal(createPostModal);
-            } else {
-                showModal(loginModal);
-            }
-        });
-        
-        showSignup.addEventListener('click', () => {
-            hideModal(loginModal);
-            showModal(signupModal);
-        });
-        
-        showLogin.addEventListener('click', () => {
-            hideModal(signupModal);
-            showModal(loginModal);
-        });
-        
-        showForgotPassword.addEventListener('click', () => {
-            hideModal(loginModal);
-            showModal(forgotPasswordModal);
-        });
-        
-        showLoginFromForgot.addEventListener('click', () => {
-            hideModal(forgotPasswordModal);
-            showModal(loginModal);
-        });
-        
-        closeModalButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                const modal = button.closest('.modal');
-                hideModal(modal);
+        function initModals() {
+            const loginBtn = document.getElementById('loginBtn');
+            const signupBtn = document.getElementById('signupBtn');
+            const newPostBtn = document.getElementById('newPostBtn');
+            const showSignup = document.getElementById('showSignup');
+            const showLogin = document.getElementById('showLogin');
+            const showForgotPassword = document.getElementById('showForgotPassword');
+            const showLoginFromForgot = document.getElementById('showLoginFromForgot');
+            const closeModalButtons = document.querySelectorAll('.close-modal');
+            
+            const loginModal = document.getElementById('loginModal');
+            const signupModal = document.getElementById('signupModal');
+            const forgotPasswordModal = document.getElementById('forgotPasswordModal');
+            const createPostModal = document.getElementById('createPostModal');
+            
+            // Show modals
+            loginBtn.addEventListener('click', () => showModal(loginModal));
+            signupBtn.addEventListener('click', () => showModal(signupModal));
+            newPostBtn.addEventListener('click', () => {
+                if (auth.currentUser) {
+                    showModal(createPostModal);
+                } else {
+                    showModal(loginModal);
+                    showToast('Please log in to create a post', 'info');
+                }
             });
-        });
-        
-        // Close modal when clicking outside
-        window.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                hideModal(e.target);
-            }
-        });
+            
+            // Switch between modals
+            showSignup.addEventListener('click', () => {
+                hideModal(loginModal);
+                showModal(signupModal);
+            });
+            
+            showLogin.addEventListener('click', () => {
+                hideModal(signupModal);
+                showModal(loginModal);
+            });
+            
+            showForgotPassword.addEventListener('click', () => {
+                hideModal(loginModal);
+                showModal(forgotPasswordModal);
+            });
+            
+            showLoginFromForgot.addEventListener('click', () => {
+                hideModal(forgotPasswordModal);
+                showModal(loginModal);
+            });
+            
+            // Close modals
+            closeModalButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const modal = button.closest('.modal');
+                    hideModal(modal);
+                });
+            });
+            
+            // Close modal when clicking outside
+            window.addEventListener('click', (e) => {
+                if (e.target.classList.contains('modal')) {
+                    hideModal(e.target);
+                }
+            });
+        }
         
         function showModal(modal) {
             modal.style.display = 'flex';
@@ -1314,242 +1351,235 @@
                 alert.style.display = 'none';
                 alert.textContent = '';
             });
+            // Reset forms
+            const forms = modal.querySelectorAll('form');
+            forms.forEach(form => form.reset());
         }
 
-        // Authentication
-        loginForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const errorAlert = document.getElementById('loginError');
+        // Firebase Authentication
+        function initAuth() {
+            const loginForm = document.getElementById('loginForm');
+            const signupForm = document.getElementById('signupForm');
+            const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+            const logoutBtn = document.getElementById('logoutBtn');
             
-            auth.signInWithEmailAndPassword(email, password)
-                .then((userCredential) => {
-                    // Check if email is verified
-                    if (userCredential.user.emailVerified) {
-                        // Signed in
+            // Login form
+            loginForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                const submitBtn = document.getElementById('loginSubmitBtn');
+                
+                setButtonLoading(submitBtn, true);
+                
+                try {
+                    const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
+                    if (user.emailVerified) {
                         hideModal(loginModal);
-                        loginForm.reset();
                         showToast('Successfully logged in!', 'success');
                     } else {
-                        // Email not verified
-                        auth.signOut();
+                        await auth.signOut();
                         showToast('Please verify your email before logging in. Check your spam folder.', 'error');
                     }
-                })
-                .catch((error) => {
+                } catch (error) {
                     showToast(error.message, 'error');
-                });
-        });
-        
-        signupForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = document.getElementById('signupName').value;
-            const email = document.getElementById('signupEmail').value;
-            const password = document.getElementById('signupPassword').value;
-            const confirmPassword = document.getElementById('signupConfirmPassword').value;
-            const errorAlert = document.getElementById('signupError');
+                } finally {
+                    setButtonLoading(submitBtn, false);
+                }
+            });
             
-            if (password !== confirmPassword) {
-                showToast('Passwords do not match', 'error');
-                return;
-            }
-            
-            auth.createUserWithEmailAndPassword(email, password)
-                .then((userCredential) => {
+            // Signup form
+            signupForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const name = document.getElementById('signupName').value;
+                const email = document.getElementById('signupEmail').value;
+                const password = document.getElementById('signupPassword').value;
+                const confirmPassword = document.getElementById('signupConfirmPassword').value;
+                const submitBtn = document.getElementById('signupSubmitBtn');
+                
+                if (password !== confirmPassword) {
+                    showToast('Passwords do not match', 'error');
+                    return;
+                }
+                
+                setButtonLoading(submitBtn, true);
+                
+                try {
+                    const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                    const user = userCredential.user;
+                    
                     // Send email verification
-                    return userCredential.user.sendEmailVerification();
-                })
-                .then(() => {
+                    await user.sendEmailVerification();
+                    
                     // Create user profile in Firestore
-                    return db.collection('users').doc(auth.currentUser.uid).set({
+                    await db.collection('users').doc(user.uid).set({
                         name: name,
                         email: email,
                         createdAt: firebase.firestore.FieldValue.serverTimestamp()
                     });
-                })
-                .then(() => {
-                    showToast('Account created! Please check your email for verification link.', 'success');
+                    
+                    showToast('Account created! Please check your email for verification link. Check your spam folder if you don\'t see it.', 'success');
                     hideModal(signupModal);
-                    signupForm.reset();
                     
                     // Sign out the user until they verify their email
-                    auth.signOut();
-                })
-                .catch((error) => {
+                    await auth.signOut();
+                } catch (error) {
                     showToast(error.message, 'error');
-                });
-        });
-        
-        forgotPasswordForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const email = document.getElementById('forgotPasswordEmail').value;
-            const successAlert = document.getElementById('forgotPasswordSuccess');
-            const errorAlert = document.getElementById('forgotPasswordError');
+                } finally {
+                    setButtonLoading(submitBtn, false);
+                }
+            });
             
-            auth.sendPasswordResetEmail(email)
-                .then(() => {
+            // Forgot password form
+            forgotPasswordForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const email = document.getElementById('forgotPasswordEmail').value;
+                const submitBtn = document.getElementById('forgotPasswordSubmitBtn');
+                
+                setButtonLoading(submitBtn, true);
+                
+                try {
+                    await auth.sendPasswordResetEmail(email);
                     showToast('Password reset email sent! Check your inbox.', 'success');
                     hideModal(forgotPasswordModal);
-                    forgotPasswordForm.reset();
-                })
-                .catch((error) => {
+                } catch (error) {
                     showToast(error.message, 'error');
-                });
-        });
-        
-        logoutBtn.addEventListener('click', () => {
-            auth.signOut();
-            showToast('You have been logged out', 'info');
-        });
-        
-        // Auth state observer
-        auth.onAuthStateChanged((user) => {
-            if (user && user.emailVerified) {
-                // User is signed in and verified
-                authButtons.style.display = 'none';
-                userInfo.style.display = 'flex';
+                } finally {
+                    setButtonLoading(submitBtn, false);
+                }
+            });
+            
+            // Logout
+            logoutBtn.addEventListener('click', async () => {
+                try {
+                    await auth.signOut();
+                    showToast('You have been logged out', 'info');
+                } catch (error) {
+                    showToast(error.message, 'error');
+                }
+            });
+            
+            // Auth state observer
+            auth.onAuthStateChanged(async (user) => {
+                const authButtons = document.getElementById('authButtons');
+                const userInfo = document.getElementById('userInfo');
+                const userAvatar = document.getElementById('userAvatar');
                 
-                // Set user avatar with first letter of name
-                db.collection('users').doc(user.uid).get()
-                    .then((doc) => {
-                        if (doc.exists) {
-                            const userName = doc.data().name;
-                            userAvatar.textContent = userName.charAt(0).toUpperCase();
+                if (user && user.emailVerified) {
+                    // User is signed in and verified
+                    authButtons.style.display = 'none';
+                    userInfo.style.display = 'flex';
+                    
+                    // Get user data from Firestore
+                    try {
+                        const userDoc = await db.collection('users').doc(user.uid).get();
+                        if (userDoc.exists) {
+                            const userData = userDoc.data();
+                            userAvatar.textContent = userData.name.charAt(0).toUpperCase();
                         } else {
                             userAvatar.textContent = user.email.charAt(0).toUpperCase();
                         }
-                    })
-                    .catch((error) => {
+                    } catch (error) {
                         console.error("Error getting user data:", error);
                         userAvatar.textContent = user.email.charAt(0).toUpperCase();
-                    });
-            } else {
-                // User is signed out or not verified
-                authButtons.style.display = 'flex';
-                userInfo.style.display = 'none';
-            }
-        });
+                    }
+                } else {
+                    // User is signed out or not verified
+                    authButtons.style.display = 'flex';
+                    userInfo.style.display = 'none';
+                }
+            });
+        }
 
-        // Create Post
-        createPostForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            if (!auth.currentUser) {
-                showToast('Please log in to create a post', 'error');
-                return;
-            }
+        // Post Management
+        function initPosts() {
+            const createPostForm = document.getElementById('createPostForm');
             
-            const title = document.getElementById('postTitle').value;
-            const category = document.getElementById('postCategory').value;
-            const content = document.getElementById('postContent').value;
-            const imageFile = document.getElementById('postImage').files[0];
-            const errorAlert = document.getElementById('createPostError');
-            
-            // Create post object
-            const post = {
-                title: title,
-                category: category,
-                content: content,
-                authorId: auth.currentUser.uid,
-                authorName: auth.currentUser.displayName || auth.currentUser.email.split('@')[0],
-                createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-                likes: 0,
-                comments: 0,
-                views: 0
-            };
-            
-            let uploadPromise = Promise.resolve(null);
-            
-            // Upload image if provided
-            if (imageFile) {
-                const storageRef = storage.ref();
-                const imageRef = storageRef.child(`posts/${Date.now()}_${imageFile.name}`);
-                uploadPromise = imageRef.put(imageFile)
-                    .then(snapshot => snapshot.ref.getDownloadURL())
-                    .then(url => {
-                        post.imageUrl = url;
-                    });
-            }
-            
-            uploadPromise
-                .then(() => {
+            createPostForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!auth.currentUser) {
+                    showToast('Please log in to create a post', 'error');
+                    return;
+                }
+                
+                const title = document.getElementById('postTitle').value;
+                const category = document.getElementById('postCategory').value;
+                const content = document.getElementById('postContent').value;
+                const imageFile = document.getElementById('postImage').files[0];
+                const submitBtn = document.getElementById('createPostSubmitBtn');
+                
+                setButtonLoading(submitBtn, true);
+                
+                try {
+                    // Get user data
+                    const userDoc = await db.collection('users').doc(auth.currentUser.uid).get();
+                    const userData = userDoc.data();
+                    
+                    // Create post object
+                    const post = {
+                        title: title,
+                        category: category,
+                        content: content,
+                        authorId: auth.currentUser.uid,
+                        authorName: userData.name,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        likes: 0,
+                        comments: 0,
+                        views: 0
+                    };
+                    
+                    // Upload image if provided
+                    if (imageFile) {
+                        const storageRef = storage.ref();
+                        const imageRef = storageRef.child(`posts/${Date.now()}_${imageFile.name}`);
+                        const snapshot = await imageRef.put(imageFile);
+                        const downloadURL = await snapshot.ref.getDownloadURL();
+                        post.imageUrl = downloadURL;
+                    }
+                    
                     // Save post to Firestore
-                    return db.collection('posts').add(post);
-                })
-                .then(() => {
+                    await db.collection('posts').add(post);
+                    
                     hideModal(createPostModal);
-                    createPostForm.reset();
                     showToast('Post published successfully!', 'success');
-                    // Refresh posts to show the new one
-                    loadPosts();
-                })
-                .catch((error) => {
+                    loadPosts(); // Refresh posts
+                } catch (error) {
                     showToast(error.message, 'error');
-                });
-        });
+                } finally {
+                    setButtonLoading(submitBtn, false);
+                }
+            });
+        }
 
         // Load and display posts
-        function loadPosts() {
+        async function loadPosts() {
+            const postsList = document.getElementById('postsList');
             postsList.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
             
-            let query = db.collection('posts');
-            
-            // Apply category filter
-            if (currentCategory !== 'all') {
-                query = query.where('category', '==', currentCategory);
-            }
-            
-            // Apply search filter
-            if (currentSearch) {
-                // Note: Firestore doesn't support full-text search natively
-                // In a real app, you'd use a search service like Algolia
-                // For this demo, we'll filter client-side
-                query = query.get().then(snapshot => {
-                    const posts = [];
-                    snapshot.forEach(doc => {
-                        const post = doc.data();
-                        post.id = doc.id;
-                        if (post.title.toLowerCase().includes(currentSearch.toLowerCase()) || 
-                            post.content.toLowerCase().includes(currentSearch.toLowerCase())) {
-                            posts.push(post);
-                        }
-                    });
-                    return { docs: posts.map(post => ({ data: () => post })) };
+            try {
+                let query = db.collection('posts').orderBy('createdAt', 'desc');
+                
+                const snapshot = await query.get();
+                
+                if (snapshot.empty) {
+                    postsList.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--gray);">No posts found. Be the first to share a solution!</p>';
+                    return;
+                }
+                
+                postsList.innerHTML = '';
+                
+                snapshot.forEach((doc) => {
+                    const post = doc.data();
+                    const postElement = createPostElement(post);
+                    postsList.appendChild(postElement);
                 });
+            } catch (error) {
+                console.error("Error loading posts:", error);
+                postsList.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--gray);">Error loading posts. Please try again.</p>';
             }
-            
-            // Apply sorting
-            if (currentSort === 'newest') {
-                query = query.orderBy('createdAt', 'desc');
-            } else if (currentSort === 'oldest') {
-                query = query.orderBy('createdAt', 'asc');
-            } else if (currentSort === 'popular') {
-                query = query.orderBy('likes', 'desc');
-            }
-            
-            // Execute query
-            if (typeof query.then === 'function') {
-                // Client-side filtered query
-                query.then(processPosts);
-            } else {
-                // Firestore query
-                query.get().then(processPosts);
-            }
-        }
-        
-        function processPosts(snapshot) {
-            postsList.innerHTML = '';
-            
-            if (snapshot.empty) {
-                postsList.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--gray);">No posts found</p>';
-                return;
-            }
-            
-            snapshot.forEach((doc) => {
-                const post = doc.data();
-                const postElement = createPostElement(post);
-                postsList.appendChild(postElement);
-            });
         }
         
         function createPostElement(post) {
@@ -1590,14 +1620,6 @@
                 </div>
             `;
             
-            // Add like functionality
-            const likeButton = postDiv.querySelector('[data-action="like"]');
-            if (likeButton && auth.currentUser) {
-                likeButton.addEventListener('click', () => {
-                    handleLike(post.id);
-                });
-            }
-            
             return postDiv;
         }
         
@@ -1627,113 +1649,24 @@
             };
             return categories[category] || category;
         }
-        
-        function handleLike(postId) {
-            if (!auth.currentUser) return;
-            
-            const userId = auth.currentUser.uid;
-            const likeRef = db.collection('likes').doc(`${postId}_${userId}`);
-            
-            likeRef.get().then(doc => {
-                if (doc.exists) {
-                    // Unlike
-                    likeRef.delete();
-                    // Decrement like count
-                    db.collection('posts').doc(postId).update({
-                        likes: firebase.firestore.FieldValue.increment(-1)
-                    });
-                } else {
-                    // Like
-                    likeRef.set({
-                        userId: userId,
-                        postId: postId,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-                    });
-                    // Increment like count
-                    db.collection('posts').doc(postId).update({
-                        likes: firebase.firestore.FieldValue.increment(1)
-                    });
-                }
-            });
-        }
-
-        // Event listeners for filters
-        searchInput.addEventListener('input', (e) => {
-            currentSearch = e.target.value;
-            loadPosts();
-        });
-        
-        sortSelect.addEventListener('change', (e) => {
-            currentSort = e.target.value;
-            loadPosts();
-        });
-        
-        categoryLinks.forEach(link => {
-            link.addEventListener('click', (e) => {
-                e.preventDefault();
-                currentCategory = link.getAttribute('data-category');
-                
-                // Update active state
-                categoryLinks.forEach(l => l.parentElement.classList.remove('active'));
-                link.parentElement.classList.add('active');
-                
-                // Update posts title
-                if (currentCategory === 'all') {
-                    postsTitle.textContent = 'All Posts';
-                } else {
-                    postsTitle.textContent = `${formatCategory(currentCategory)} Posts`;
-                }
-                
-                loadPosts();
-            });
-        });
-        
-        categoryCards.forEach(card => {
-            card.addEventListener('click', () => {
-                const category = card.getAttribute('data-category');
-                currentCategory = category;
-                
-                // Update active state in sidebar
-                categoryLinks.forEach(link => {
-                    if (link.getAttribute('data-category') === category) {
-                        link.parentElement.classList.add('active');
-                    } else {
-                        link.parentElement.classList.remove('active');
-                    }
-                });
-                
-                // Update posts title
-                postsTitle.textContent = `${formatCategory(category)} Posts`;
-                
-                loadPosts();
-            });
-        });
-
-        // Crypto donation functionality
-        cryptoOptions.forEach(option => {
-            option.addEventListener('click', () => {
-                const crypto = option.getAttribute('data-crypto');
-                
-                // Update active state
-                cryptoOptions.forEach(opt => opt.classList.remove('active'));
-                option.classList.add('active');
-                
-                // Show corresponding address
-                cryptoAddresses.forEach(addr => {
-                    if (addr.id === `${crypto}-address`) {
-                        addr.classList.add('active');
-                    } else {
-                        addr.classList.remove('active');
-                    }
-                });
-            });
-        });
 
         // Initialize the app
         function initApp() {
             initTheme();
+            initCryptoCopy();
+            initCryptoOptions();
+            initModals();
+            initAuth();
+            initPosts();
             loadPosts();
-            updateCategoryStats();
+            
+            // Set up theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Show welcome message
+            setTimeout(() => {
+                showToast('Welcome to Android FRP Solutions Forum!', 'info');
+            }, 1000);
         }
 
         // Start the app when DOM is loaded
